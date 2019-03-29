@@ -1,10 +1,23 @@
 
+def die(message):
+    import sys
+    print("Error: " + message, file=sys.stderr)
+    sys.exit(1)
+
+
 def get_template(env, typename, name):
     from jinja2.exceptions import TemplateNotFound
     try:
         return env.get_template("{}.{}.j2".format(typename, name))
     except TemplateNotFound:
         return env.get_template("{}.default.j2".format(typename))
+
+
+def get_var_from_string(var):
+    if not '=' in var:
+        die("Missing var value {}".format(var))
+
+    return var.split('=', 1)
 
 
 def get_git_version():
@@ -37,7 +50,7 @@ def get_git_version():
         dirty)
 
 
-def generate(generator, buildroot="build", modulefile="modules.yaml"):
+def generate(generator, buildroot, modulefile, args):
     import os
     from os.path import abspath, dirname, join
     from os.path import isabs, isdir, isfile, islink
@@ -49,9 +62,7 @@ def generate(generator, buildroot="build", modulefile="modules.yaml"):
         modulefile = abspath(modulefile)
         srcroot = dirname(modulefile)
     else:
-        import sys
-        print("Error: Could not find module file.", file=sys.stderr)
-        sys.exit(1)
+        die("Could not find module file.")
 
     if not isabs(buildroot):
         buildroot = join(srcroot, buildroot)
@@ -78,6 +89,14 @@ def generate(generator, buildroot="build", modulefile="modules.yaml"):
     loader = FileSystemLoader(template_path)
     env = Environment(loader=loader)
 
+    tvars = {}
+    for var in args:
+        tvars.update([get_var_from_string(var)])
+
+    for var, value in config.vars.items():
+        if var in tvars: continue
+        tvars[var] = value
+
     buildfiles = []
     templates = set()
 
@@ -90,6 +109,7 @@ def generate(generator, buildroot="build", modulefile="modules.yaml"):
             out.write(template.render(
                 module=mod,
                 buildfile=buildfile,
+                vars=tvars,
                 version=git_version))
 
     for target, mods in config.targets.items():
@@ -106,6 +126,7 @@ def generate(generator, buildroot="build", modulefile="modules.yaml"):
                 target=target,
                 modules=mods,
                 buildfile=buildfile,
+                vars=tvars,
                 version=git_version))
 
     # Top level buildfile cannot use an absolute path or ninja won't
@@ -127,4 +148,5 @@ def generate(generator, buildroot="build", modulefile="modules.yaml"):
             templates=[abspath(f) for f in templates],
             generator=generator,
             modulefile=modulefile,
+            vars=tvars,
             version=git_version))

@@ -3,6 +3,10 @@ builddir = {{ buildroot }}
 srcroot = {{ srcroot }}
 modulefile = {{ modulefile }}
 
+{%- for var, value in vars.items() %}
+{{ var }} = {{ value }}
+{%- endfor %}
+
 warnflags = $
     -Wformat=2 $
     -Winit-self $
@@ -98,7 +102,13 @@ rule lib
 rule regen
     generator = true
     description = Regenrating build files
-    command = {{ generator }} $builddir $modulefile
+    command = $
+        {{ generator }} $
+        {%- for var, value in vars %}
+        {{ var }}={{ value }} $
+        {%- endfor %}
+        --output $builddir $
+        --config $modulefile
 
 rule cp
     description = Copying $name

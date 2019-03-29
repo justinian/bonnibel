@@ -34,6 +34,10 @@ build ${builddir}/{{ module.output }} : {{ module.kind }} $
     {{ buildfile }}
     name = {{ module.name }}
 
+{% if module.default %}
+default ${builddir}/{{ module.output }}
+{% endif %}
+
 {% block extra %}
 {% endblock %}
 

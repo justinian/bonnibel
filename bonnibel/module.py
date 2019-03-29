@@ -12,6 +12,11 @@ class Module:
         self.defines = kwargs.get("defines", tuple())
         self.depmods = []
 
+        default_default = False
+        if self.kind == "exe":
+            default_default = True
+        self.default = kwargs.get("default", default_default)
+
         sources = [join(root, f) for f in kwargs.get("source", tuple())]
         modroot = commonpath(sources)
         while not isdir(modroot):
