@@ -7,7 +7,7 @@ def get_readme():
 
 setup(
     name='bonnibel',
-    version='0.1.1',
+    version='0.2.0',
     description='Build script generator for the Popcorn kernel',
     long_description=get_readme(),
     keywords=['build', 'ninja', 'generator'],
