@@ -119,7 +119,7 @@ rule cp
 
 rule dump
     description = Dumping decompiled $name
-    command = objdump -DS $in > $out
+    command = objdump -DSC -M intel $in > $out
 {% endblock %}
 
 {% for target in targets %}
